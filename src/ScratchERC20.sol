@@ -26,10 +26,16 @@ contract MyHelloToken {
     function _mint(address to, uint256 amount) internal virtual {
         if (address (0) == to)
             revert MyHelloToken__ADDRESS_0();
-        if (amount == 0)
-            revert MyHelloToken__AMOUNT_0();
-        balanceOf[to] = amount;
+        balanceOf[to] += amount;
         totalSupply += amount;
         emit Transfer(address(0), to, amount);
+    }
+
+    function transfer(address to, uint256 amount) public {
+        if (to == address(0))
+            revert MyHelloToken__ADDRESS_0();
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        emit Transfer(msg.sender, to, amount);
     }
 }
