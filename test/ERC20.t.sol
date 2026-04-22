@@ -70,4 +70,20 @@ contract MyHelloTokenTest is Test {
         token.approve(bob, amount);
         assertEq(token.allowance(alice, bob), amount);
     }
+
+    function testEx6() public {
+        uint256 amount = 10;
+        uint256 totalSupplyBef = token.totalSupply();
+        uint256 balanceAliceBef;
+        uint256 balanceBobBef = token.balanceOf(bob);
+
+        token.mint(alice, amount);
+        balanceAliceBef = token.balanceOf(alice);
+        vm.prank(alice);
+        token.approve(bob, amount);
+        assertEq(token.allowance(alice, bob), amount);
+        token.transferFrom(alice, bob, amount);
+        assertEq(token.balanceOf(alice), balanceAliceBef - amount);
+        assertEq(token.balanceOf(bob), balanceBobBef + amount);
+    }
 }

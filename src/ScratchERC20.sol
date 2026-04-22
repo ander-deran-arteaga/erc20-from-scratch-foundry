@@ -47,4 +47,14 @@ contract MyHelloToken {
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
     }
+
+    function transferFrom(address from, address to, uint256 amount) public {
+        if (from == address(0) || to == address(0)) {
+            revert MyHelloToken__ADDRESS_0();
+        }
+        allowance[from][to] -= amount;
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+        emit Transfer(from, to, amount);
+    }
 }
