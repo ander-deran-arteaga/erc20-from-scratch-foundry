@@ -10,6 +10,10 @@ contract ScratchERC20Harness is MyHelloToken {
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }
+
+    function burn(address from, uint256 amount) public {
+        _burn(from, amount);
+    }
 }
 
 contract MyHelloTokenTest is Test {
@@ -45,7 +49,6 @@ contract MyHelloTokenTest is Test {
 
     function testEx3() public {
         uint256 amount = 5;
-        uint256 totalSupplyBef = token.totalSupply();
         uint256 balanceAliceBef;
         uint256 balanceBobBef = token.balanceOf(bob);
 
@@ -73,7 +76,6 @@ contract MyHelloTokenTest is Test {
 
     function testEx6() public {
         uint256 amount = 10;
-        uint256 totalSupplyBef = token.totalSupply();
         uint256 balanceAliceBef;
         uint256 balanceBobBef = token.balanceOf(bob);
 
@@ -82,8 +84,57 @@ contract MyHelloTokenTest is Test {
         vm.prank(alice);
         token.approve(bob, amount);
         assertEq(token.allowance(alice, bob), amount);
+        vm.prank(bob);
         token.transferFrom(alice, bob, amount);
         assertEq(token.balanceOf(alice), balanceAliceBef - amount);
         assertEq(token.balanceOf(bob), balanceBobBef + amount);
+    }
+
+    function testEx7() public {
+        uint256 maxAllowance = type(uint256).max;
+        uint256 amount = 10;
+
+        token.mint(alice, amount);
+        vm.prank(alice);
+        token.approve(bob, maxAllowance);
+        vm.prank(bob);
+        token.transferFrom(alice, bob, amount / 2);
+        assertEq(token.allowance(alice, bob), maxAllowance);
+        vm.prank(bob);
+        token.transferFrom(alice, bob, amount / 2);
+        assertEq(token.allowance(alice, bob), maxAllowance);
+    }
+
+    function testEx9() public {
+        uint256 amount = 10;
+        //increase
+        token.mint(alice, amount);
+        vm.prank(alice);
+        token.approve(bob, amount);
+        vm.expectEmit();
+        emit MyHelloToken.Approval(alice, bob, amount * 2);
+        vm.prank(alice);
+        token.increaseAllowance(bob, amount);
+        assertEq(token.allowance(alice, bob), amount * 2);
+        //decrease
+        vm.expectEmit();
+        emit MyHelloToken.Approval(alice, bob, amount);
+        vm.prank(alice);
+        token.decreaseAllowance(bob, amount);
+        assertEq(token.allowance(alice, bob), amount);
+    }
+
+    function testEx10() public {
+        uint256 amountMint = 10;
+        uint256 totalSupplyBef = token.totalSupply();
+        uint256 balanceBobBef = token.balanceOf(bob);
+        uint256 amountBurned = 5;
+
+        token.mint(alice, amountMint);
+        vm.expectRevert();
+        token.burn(alice, amountBurned * 10);
+        token.burn(alice, amountBurned);
+        assertEq(token.totalSupply(), (totalSupplyBef + amountMint) - amountBurned);
+        assertEq(token.balanceOf(alice), amountMint - amountBurned);
     }
 }
