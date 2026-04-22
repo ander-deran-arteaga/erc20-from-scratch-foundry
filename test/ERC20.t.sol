@@ -13,7 +13,6 @@ contract ScratchERC20Harness is MyHelloToken {
 }
 
 contract MyHelloTokenTest is Test {
-
     ScratchERC20Harness public token;
 
     uint8 public constant DECIMALS = 9;

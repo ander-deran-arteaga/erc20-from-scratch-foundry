@@ -1,66 +1,34 @@
-## Foundry
+# ERC20 From Scratch (Foundry)
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Build an ERC20 implementation **from scratch** in Solidity using **Foundry**, with a “Piscine-style” progression: tiny exercises → production-minded behavior → fuzz/invariant testing.
 
-Foundry consists of:
+> **From scratch** here means: **no importing OpenZeppelin’s ERC20 implementation in `src/`**.  
+> Interfaces/tools in tests are fine.
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+---
 
-## Documentation
+## Goals
 
-https://book.getfoundry.sh/
+- Understand ERC20 mechanics deeply (storage, events, allowances, edge cases).
+- Write **high-signal Foundry tests** (unit + fuzz + invariants).
+- Keep the repo reviewer-friendly: small commits, clear spec mapping, clean history.
 
-## Usage
+---
 
-### Build
+## What’s included (current direction)
 
-```shell
-$ forge build
-```
+- `ScratchERC20` ERC20 implementation (no OZ ERC20).
+- Foundry test suite.
+- `forge-std` as a **git submodule** (keeps repo clean).
 
-### Test
+---
 
-```shell
-$ forge test
-```
+## Quickstart
 
-### Format
+### Requirements
+- Foundry installed (`forge`, `cast`)
 
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+### Clone (with submodule)
+```bash
+git clone --recurse-submodules <your-repo-url>
+cd erc20-from-scratch-foundry
