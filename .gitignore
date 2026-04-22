@@ -1,0 +1,14 @@
+# secrets
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.seed
+keystore/
+secrets/
+
+# foundry build artifacts
+out/
+cache/
+broadcast/
