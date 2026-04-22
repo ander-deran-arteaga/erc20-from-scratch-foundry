@@ -58,4 +58,16 @@ contract MyHelloTokenTest is Test {
         assertEq(token.balanceOf(bob), balanceBobBef + amount);
         assertEq(token.balanceOf(alice), balanceAliceBef - amount);
     }
+
+    function testEx5() public {
+        uint256 amount = 5;
+
+        vm.prank(alice);
+        token.approve(bob, amount);
+        assertEq(token.allowance(alice, bob), amount);
+        // to prove it doesn't stack
+        vm.prank(alice);
+        token.approve(bob, amount);
+        assertEq(token.allowance(alice, bob), amount);
+    }
 }
