@@ -4,20 +4,8 @@ pragma solidity ^0.8.20;
 import {MyHelloToken} from "../src/ScratchERC20.sol";
 import {Test, console} from "forge-std/Test.sol";
 
-contract ScratchERC20Harness is MyHelloToken {
-    constructor(string memory n, string memory s, uint8 d) MyHelloToken(n, s, d) {}
-
-    function mint(address to, uint256 amount) public {
-        _mint(to, amount);
-    }
-
-    function burn(address from, uint256 amount) public {
-        _burn(from, amount);
-    }
-}
-
 contract MyHelloTokenTest is Test {
-    ScratchERC20Harness public token;
+    MyHelloToken public token;
 
     uint8 public constant DECIMALS = 9;
 
@@ -25,7 +13,7 @@ contract MyHelloTokenTest is Test {
     address bob = makeAddr("BOB");
 
     function setUp() public {
-        token = new ScratchERC20Harness("TEMPERC20", "E20", 9);
+        token = new MyHelloToken("TEMPERC20", "E20", 9);
     }
 
     function testEx1() public view {
@@ -111,13 +99,13 @@ contract MyHelloTokenTest is Test {
         token.mint(alice, amount);
         vm.prank(alice);
         token.approve(bob, amount);
-        vm.expectEmit();
+        vm.expectEmit(true, true, true, true);
         emit MyHelloToken.Approval(alice, bob, amount * 2);
         vm.prank(alice);
         token.increaseAllowance(bob, amount);
         assertEq(token.allowance(alice, bob), amount * 2);
         //decrease
-        vm.expectEmit();
+        vm.expectEmit(true, true, true, true);
         emit MyHelloToken.Approval(alice, bob, amount);
         vm.prank(alice);
         token.decreaseAllowance(bob, amount);
@@ -127,7 +115,6 @@ contract MyHelloTokenTest is Test {
     function testEx10() public {
         uint256 amountMint = 10;
         uint256 totalSupplyBef = token.totalSupply();
-        uint256 balanceBobBef = token.balanceOf(bob);
         uint256 amountBurned = 5;
 
         token.mint(alice, amountMint);
@@ -136,5 +123,35 @@ contract MyHelloTokenTest is Test {
         token.burn(alice, amountBurned);
         assertEq(token.totalSupply(), (totalSupplyBef + amountMint) - amountBurned);
         assertEq(token.balanceOf(alice), amountMint - amountBurned);
+    }
+
+    function testEx11() public {
+        uint256 amountMint = 10;
+
+        vm.prank(alice);
+        vm.expectRevert(MyHelloToken.MyHelloToken__NotOwner.selector);
+        token.transferOwnership(alice);
+        // I will be able to do this because I deployed the ERC20 in this contract and
+        // I'm calling it with no prank so it means i am calling with the address of this contract
+        token.mint(alice, amountMint);
+        token.transferOwnership(alice);
+        assertEq(token.owner(), alice);
+    }
+
+    function testEx12() public {
+        uint256 amount = 10;
+
+        token.mint(alice, amount);
+        token.pause();
+        vm.expectRevert(MyHelloToken.MyHelloToken__Paused.selector);
+        vm.prank(alice);
+        token.transfer(bob, amount);
+        token.unpause();
+        vm.prank(alice);
+        token.transfer(bob, amount);
+        assertEq(token.balanceOf(bob), amount);
+        vm.prank(alice);
+        vm.expectRevert(MyHelloToken.MyHelloToken__NotOwner.selector);
+        token.pause();
     }
 }

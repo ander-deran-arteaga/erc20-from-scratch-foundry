@@ -5,6 +5,8 @@ contract MyHelloToken {
     string public name;
     string public symbol;
     uint8 public decimals;
+    address public owner;
+    bool public paused;
 
     uint256 public totalSupply = 1000;
     mapping(address => uint256) public balanceOf;
@@ -12,13 +14,33 @@ contract MyHelloToken {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Paused();
+    event Unpaused();
 
     error MyHelloToken__ZeroAddress();
+    error MyHelloToken__NotOwner();
+    error MyHelloToken__Paused();
 
     constructor(string memory _name, string memory _symbol, uint8 _decimals) {
         name = _name;
         symbol = _symbol;
         decimals = _decimals;
+        owner = msg.sender;
+        paused = false;
+    }
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) {
+            revert MyHelloToken__NotOwner();
+        }
+        _;
+    }
+
+    modifier whenNotPaused() {
+        if (paused) {
+            revert MyHelloToken__Paused();
+        }
+        _;
     }
 
     function _mint(address to, uint256 amount) internal virtual {
@@ -39,7 +61,15 @@ contract MyHelloToken {
         emit Transfer(from, address(0), amount);
     }
 
-    function transfer(address to, uint256 amount) public returns (bool) {
+    function mint(address to, uint256 amount) external onlyOwner {
+        _mint(to, amount);
+    }
+
+    function burn(address from, uint256 amount) external onlyOwner {
+        _burn(from, amount);
+    }
+
+    function transfer(address to, uint256 amount) public whenNotPaused returns (bool) {
         if (to == address(0)) {
             revert MyHelloToken__ZeroAddress();
         }
@@ -58,7 +88,7 @@ contract MyHelloToken {
         return true;
     }
 
-    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) public whenNotPaused returns (bool) {
         if (from == address(0) || to == address(0)) {
             revert MyHelloToken__ZeroAddress();
         }
@@ -77,6 +107,7 @@ contract MyHelloToken {
         }
         allowance[msg.sender][spender] += addedValue;
         emit Approval(msg.sender, spender, allowance[msg.sender][spender]);
+        return true;
     }
 
     function decreaseAllowance(address spender, uint256 substractValue) public returns (bool) {
@@ -85,5 +116,23 @@ contract MyHelloToken {
         }
         allowance[msg.sender][spender] -= substractValue;
         emit Approval(msg.sender, spender, allowance[msg.sender][spender]);
+        return true;
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) {
+            revert MyHelloToken__ZeroAddress();
+        }
+        owner = newOwner;
+    }
+
+    function pause() external onlyOwner {
+        paused = true;
+        emit Paused();
+    }
+
+    function unpause() external onlyOwner {
+        paused = false;
+        emit Unpaused();
     }
 }
