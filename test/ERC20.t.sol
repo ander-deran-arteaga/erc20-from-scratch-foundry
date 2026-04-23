@@ -7,13 +7,13 @@ import {Test, console} from "forge-std/Test.sol";
 contract MyHelloTokenTest is Test {
     MyHelloToken public token;
 
-    uint8 public constant DECIMALS = 9;
+    uint8 public constant DECIMALS = 18;
 
     address alice = makeAddr("ALICE");
     address bob = makeAddr("BOB");
 
     function setUp() public {
-        token = new MyHelloToken("TEMPERC20", "E20", 9);
+        token = new MyHelloToken("TEMPERC20", "E20", 18);
     }
 
     function testEx1() public view {
@@ -154,4 +154,27 @@ contract MyHelloTokenTest is Test {
         vm.expectRevert(MyHelloToken.MyHelloToken__NotOwner.selector);
         token.pause();
     }
+
+    function testEx13andEx14(uint256 feeBps, uint256 amount) public {
+        amount = bound(amount, 0, token.balanceOf(alice));
+        feeBps = bound(feeBps, 0, 1000);
+        address feeRecipient = makeAddr("feeRecipient");
+
+        token.setFeeConfig(feeRecipient, feeBps);
+        assertEq(feeRecipient, token.feeRecipient());
+        assertEq(feeBps, token.feeBps());
+        token.mint(alice, amount);
+        vm.prank(alice);
+        token.transfer(bob, amount);
+        uint256 expectedFee = (amount * feeBps) / 10000;
+        assertEq(token.balanceOf(feeRecipient), expectedFee);
+        assertEq(token.balanceOf(bob), amount - expectedFee);
+        assertEq(token.balanceOf(alice), 0);
+        // invariant
+        uint256 maxFee = 10000;
+        vm.expectRevert(MyHelloToken.MyHelloToken__InvalidFee.selector);
+        token.setFeeConfig(feeRecipient, maxFee);
+    }
+
+    function testEx16() public {}
 }

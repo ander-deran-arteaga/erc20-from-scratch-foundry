@@ -7,6 +7,8 @@ contract MyHelloToken {
     uint8 public decimals;
     address public owner;
     bool public paused;
+    address public feeRecipient;
+    uint256 public feeBps;
 
     uint256 public totalSupply = 1000;
     mapping(address => uint256) public balanceOf;
@@ -20,6 +22,7 @@ contract MyHelloToken {
     error MyHelloToken__ZeroAddress();
     error MyHelloToken__NotOwner();
     error MyHelloToken__Paused();
+    error MyHelloToken__InvalidFee();
 
     constructor(string memory _name, string memory _symbol, uint8 _decimals) {
         name = _name;
@@ -41,6 +44,17 @@ contract MyHelloToken {
             revert MyHelloToken__Paused();
         }
         _;
+    }
+
+    function setFeeConfig(address _feeRecipient, uint256 _feeBps) external onlyOwner {
+        if (_feeRecipient == address(0)) {
+            revert MyHelloToken__ZeroAddress();
+        }
+        if (_feeBps > 1000) {
+            revert MyHelloToken__InvalidFee();
+        }
+        feeRecipient = _feeRecipient;
+        feeBps = _feeBps;
     }
 
     function _mint(address to, uint256 amount) internal virtual {
@@ -73,9 +87,12 @@ contract MyHelloToken {
         if (to == address(0)) {
             revert MyHelloToken__ZeroAddress();
         }
+        uint256 fee = (amount * feeBps) / 10000;
+
+        balanceOf[feeRecipient] += fee;
         balanceOf[msg.sender] -= amount;
-        balanceOf[to] += amount;
-        emit Transfer(msg.sender, to, amount);
+        balanceOf[to] += amount - fee;
+        emit Transfer(msg.sender, to, amount - fee);
         return true;
     }
 
@@ -92,12 +109,15 @@ contract MyHelloToken {
         if (from == address(0) || to == address(0)) {
             revert MyHelloToken__ZeroAddress();
         }
+        uint256 fee = (amount * feeBps) / 10000;
+
         if (allowance[from][msg.sender] != type(uint256).max) {
             allowance[from][msg.sender] -= amount;
         }
+        balanceOf[feeRecipient] += fee;
         balanceOf[from] -= amount;
-        balanceOf[to] += amount;
-        emit Transfer(from, to, amount);
+        balanceOf[to] += amount - fee;
+        emit Transfer(from, to, amount - fee);
         return true;
     }
 
