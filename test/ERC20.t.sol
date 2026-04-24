@@ -176,5 +176,13 @@ contract MyHelloTokenTest is Test {
         token.setFeeConfig(feeRecipient, maxFee);
     }
 
-    function testEx16() public {}
+    function testEx16() public {
+        uint256 feeBps = 0;
+        address feeRecipient;
+        uint256 amount;
+
+        token.setFeeConfig(feeRecipient, feeBps);
+
+        token.transfer(alice, amount);
+    }
 }
